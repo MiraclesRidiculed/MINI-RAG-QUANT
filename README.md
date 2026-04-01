@@ -1,6 +1,6 @@
 # mini-rag-quant
 
-A small educational demo that stitches together retrieval-augmented generation (RAG) pieces: deterministic fake embeddings, int8 quantization of those vectors, cosine-style similarity retrieval, and a tiny attention-based `MiniTransformer` over the combined query and retrieved text.
+A small educational demo that stitches together retrieval-augmented generation (RAG) pieces: deterministic fake embeddings, int8 quantization of those vectors, cosine-style similarity retrieval, and a tiny attention-based `MiniGPT` over the combined query and retrieved text.
 
 ## Requirements
 
@@ -34,12 +34,13 @@ If you have a pre-trained model, place `model.pth` in the root directory and mod
 
 | Path | Role |
 |------|------|
-| `src/main.py` | End-to-end script: load docs, embed, quantize, retrieve, run `MiniTransformer` |
+| `src/main.py` | End-to-end script: load docs, embed, quantize, retrieve, train and run `MiniGPT` |
 | `src/embed.py` | Deterministic pseudo-embedding: `torch.randn(8)` seeded by `len(text)` |
 | `src/quantize.py` | Per-tensor int8 quantization with scale; `dequantize` for round-trip |
 | `src/retrieve.py` | Dot-product scores over doc vectors; returns top document string |
 | `src/model.py` | Small `nn.Module` with Q/K/V linear layers and softmax attention |
 | `data/docs.txt` | One document per line for retrieval |
+| `data/plots.txt` | Training data: movie plots text for the model |
 
 ## Behavior notes
 
