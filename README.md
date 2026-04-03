@@ -1,79 +1,147 @@
-# mini-rag-quant
+#  mini-rag-quant
 
-This package now trains a real byte-level BPE vocabulary on symptom-to-diagnosis text and uses that tokenizer in a small transformer classifier plus a retrieval layer over known training cases.
+**Lightweight Retrieval-Augmented Diagnosis AI with Tokenizer Training + Quantization Concepts**
 
-The previous movie-plot language-model demo was a poor fit for diagnosis-style prompts, so the main entrypoint has been repointed at a medical-domain dataset pipeline that stays grounded in known labels instead of open-ended text generation.
+---
 
-## What Changed
+##  Overview
 
-- Builds a reusable byte-level BPE tokenizer with reserved special tokens and saved metadata.
-- Downloads and caches the public `gretelai/symptom_to_diagnosis` dataset locally as JSONL.
-- Trains a compact transformer classifier on symptom descriptions.
-- Uses BPE-token lexical retrieval over training examples to ground predictions.
-- Combines classifier probabilities with retriever scores to reduce unstable outputs.
+mini-rag-quant is a compact, end-to-end demonstration of a **grounded AI diagnosis system** built from scratch.
 
-## Requirements
+Instead of relying on large pre-trained models, this project:
 
-- Python 3.10+ recommended
-- See `requirements.txt` (`torch`, `numpy`, `tokenizers`, `datasets`)
+* Trains a **byte-level BPE tokenizer**
+* Builds a **small transformer classifier**
+* Adds a **retrieval layer over known cases**
+* Combines both to produce **stable, label-constrained predictions**
 
-## Setup
+ The goal:
+**Show how intelligent systems can be built efficiently with limited compute while reducing hallucinations.**
+
+---
+
+##  Core Idea
+
+> “Don’t generate blindly — retrieve + constrain + predict.”
+
+This system avoids free-form generation and instead:
+
+* Grounds predictions in **known medical labels**
+* Uses **retrieval to stabilize outputs**
+* Keeps everything **CPU-friendly and explainable**
+
+---
+
+##  Features
+
+* Byte-level BPE tokenizer (trained from scratch)
+* Local dataset caching (symptom → diagnosis)
+* Compact transformer classifier
+* Retrieval using BPE-token TF-IDF
+* Hybrid scoring (classifier + retriever)
+* Model + tokenizer persistence
+* Evaluation + metrics tracking
+
+---
+
+## Architecture
+
+User Query
+→ Tokenization (BPE)
+→ Transformer Classifier (probabilities)
+→ Retrieval (similar cases)
+→ Score Fusion
+→ Final Diagnosis Prediction
+
+---
+
+##  Project Structure
+
+| Path                  | Description                        |
+| --------------------- | ---------------------------------- |
+| `src/main.py`         | Main training + inference pipeline |
+| `src/bpe.py`          | Tokenizer training + loading       |
+| `src/disease_data.py` | Dataset handling + caching         |
+| `src/model.py`        | Transformer + classifier           |
+| `src/retrieve.py`     | Retrieval system                   |
+| `data/`               | Tokenizer, dataset, metadata       |
+| `model_diagnosis.pth` | Trained model                      |
+
+---
+
+##  Setup
 
 ```bash
+git clone <your-repo-url>
 cd mini-rag-quant
+
 python -m venv venv
-# Windows: venv\Scripts\activate
-# macOS/Linux: source venv/bin/activate
+# Windows
+venv\Scripts\activate
+# Mac/Linux
+source venv/bin/activate
+
 pip install -r requirements.txt
 ```
 
-## Train And Run
+---
 
-From the `src` directory:
+##  Train & Run
 
 ```bash
 cd src
 python main.py --retrain
 ```
 
-That command will:
+This will:
 
-1. Download/cache the symptom-diagnosis dataset into `data/diagnosis_dataset/`
-2. Train a BPE tokenizer and save it to `data/diagnosis_bpe_tokenizer.json`
-3. Train the diagnosis classifier and save it to `model_diagnosis.pth`
-4. Evaluate on the held-out test split
-5. Run a prediction for the provided query
+* Download dataset
+* Train tokenizer
+* Train model
+* Evaluate performance
+* Run prediction
 
-You can pass your own symptom query:
+---
+
+##  Example
 
 ```bash
-python main.py --query "I have a fever, chills, vomiting, and body pain."
+python main.py --query "I have fever, chills and body pain"
 ```
 
-If artifacts already exist, the script will load them instead of retraining.
+---
 
-## Project Layout
+## Why This Matters
 
-| Path | Role |
-|------|------|
-| `src/main.py` | End-to-end training, evaluation, and prediction entrypoint |
-| `src/bpe.py` | BPE tokenizer training/loading with metadata and special tokens |
-| `src/disease_data.py` | Dataset download, local caching, and label-space generation |
-| `src/model.py` | Original `MiniGPT` plus the new `DiagnosisClassifier` |
-| `src/retrieve.py` | Retrieval over training cases using BPE-token TF-IDF |
-| `data/diagnosis_dataset/` | Cached local copy of the dataset after first run |
-| `data/diagnosis_bpe_tokenizer.json` | Saved domain tokenizer |
-| `data/diagnosis_bpe_tokenizer.meta.json` | Tokenizer training metadata |
-| `data/diagnosis_labels.json` | Ordered diagnosis label list |
-| `data/diagnosis_metrics.json` | Saved test metrics |
-| `model_diagnosis.pth` | Trained diagnosis classifier checkpoint |
+Most AI systems:
+❌ hallucinate
+❌ require huge models
 
-## Notes
+This system:
+✅ grounded in real data
+✅ efficient
+✅ explainable
+✅ reproducible
 
-- This is still a tiny CPU-friendly educational model, not a production medical system.
-- The prediction path is deliberately label-constrained and retrieval-backed to avoid free-form hallucinated answers.
-- Outputs should be treated as experimental signals only, not as clinical advice.
+---
+
+##  Disclaimer
+
+This project is for **educational and research purposes only**.
+It is **not a medical system** and should **not be used for diagnosis or treatment**.
+Always consult a qualified healthcare professional.
+
+---
+
+## Hackathon Value
+
+* Demonstrates **LLM fundamentals from scratch**
+* Shows **RAG without heavy frameworks**
+* Highlights **efficiency + quantization mindset**
+* Fully reproducible pipeline
+
+---
 
 ## License
 
-Add a license if you distribute this project.
+This project is licensed under the MIT License.
