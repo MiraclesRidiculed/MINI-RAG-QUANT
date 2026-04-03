@@ -50,4 +50,9 @@ If you have a pre-trained model, place `model.pth` in the root directory and mod
 
 ## License
 
-Add a license if you distribute this project.
+MIT License
+
+Copyright (c) 2026 MiraclesRidiculed
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files...
