@@ -1,0 +1,14 @@
+{
+  "tokenizer_type": "byte-level-bpe",
+  "actual_vocab_size": 1024,
+  "requested_vocab_size": 1024,
+  "min_frequency": 2,
+  "num_training_texts": 3195,
+  "special_tokens": [
+    "[PAD]",
+    "[UNK]",
+    "[BOS]",
+    "[EOS]",
+    "[SEP]"
+  ]
+}

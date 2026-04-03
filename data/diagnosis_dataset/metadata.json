@@ -1,0 +1,5 @@
+{
+  "dataset_name": "gretelai/symptom_to_diagnosis",
+  "train_examples": 853,
+  "test_examples": 212
+}
