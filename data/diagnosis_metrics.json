@@ -1,0 +1,15 @@
+{
+  "dataset": "gretelai/symptom_to_diagnosis",
+  "tokenizer_vocab_size": 1024,
+  "num_labels": 22,
+  "classifier_metrics": {
+    "loss": 1.0388970420045673,
+    "accuracy": 0.7122641509433962,
+    "top3_accuracy": 0.8962264150943396
+  },
+  "inference_stack_metrics": {
+    "ensemble_accuracy": 0.8773584905660378,
+    "retrieval_top1_accuracy": 0.8537735849056604,
+    "low_confidence_rate": 0.1320754716981132
+  }
+}
