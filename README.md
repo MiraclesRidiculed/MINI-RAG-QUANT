@@ -1,146 +1,213 @@
-#  mini-rag-quant
+# MINI-RAG-QUANT
 
-**Lightweight Retrieval-Augmented Diagnosis AI with Tokenizer Training + Quantization Concepts**
+**Hackathon demo for showing how much model memory drops after quantization and KV-cache optimization.**
 
----
+## What This Project Is
 
-##  Overview
+MINI-RAG-QUANT is a compact end-to-end demo built to answer one main question clearly:
 
-mini-rag-quant is a compact, end-to-end demonstration of a **grounded AI diagnosis system** built from scratch.
+**How much smaller can a useful model become after quantization and inference-memory optimization?**
 
-Instead of relying on large pre-trained models, this project:
+The diagnosis workflow is the demo surface.
+The primary goal is the **before-vs-after memory story**:
 
-* Trains a **byte-level BPE tokenizer**
-* Builds a **small transformer classifier**
-* Adds a **retrieval layer over known cases**
-* Combines both to produce **stable, label-constrained predictions**
+- Train a small transformer classifier
+- Measure floating-point weight size
+- Estimate the post-quantization INT8 weight size
+- Estimate autoregressive KV-cache memory and optimized cache variants
+- Show that the same workflow can still run with a much smaller model payload
 
- The goal:
-**Show how intelligent systems can be built efficiently with limited compute while reducing hallucinations.**
+## Hackathon Pitch
 
----
+Most AI demos focus only on accuracy.
+This one focuses on **deployability**:
 
-##  Core Idea
+- Smaller memory footprint
+- Lower serving cost
+- Easier CPU-friendly deployment
+- Lower inference-time memory pressure from KV-cache optimization
+- A clear, measurable quantization story judges can understand quickly
 
-> “Don’t generate blindly — retrieve + constrain + predict.”
+## Core Demo Story
 
-This system avoids free-form generation and instead:
+This project shows:
 
-* Grounds predictions in **known medical labels**
-* Uses **retrieval to stabilize outputs**
-* Keeps everything **CPU-friendly and explainable**
+1. A compact BPE-based symptom classifier can be trained locally.
+2. The model can be evaluated in standard floating-point form.
+3. The weight payload can be compared against an INT8 quantized estimate.
+4. Decoder-style KV-cache memory can be compared against quantized and sliding-window cache variants.
+5. The output workflow still remains usable after we optimize for size.
 
----
+## Why Diagnosis?
 
-##  Features
+Diagnosis is not the primary product claim here.
+It is the **example workload** used to make the quantization story concrete.
 
-* Byte-level BPE tokenizer (trained from scratch)
-* Local dataset caching (symptom → diagnosis)
-* Compact transformer classifier
-* Retrieval using BPE-token TF-IDF
-* Hybrid scoring (classifier + retriever)
-* Model + tokenizer persistence
-* Evaluation + metrics tracking
+It gives us:
 
----
+- Real text input
+- A constrained label space
+- Retrieval-assisted grounding
+- A visible output that is easy to demo live
 
-## Architecture
+## Main Features
 
-User Query
-→ Tokenization (BPE)
-→ Transformer Classifier (probabilities)
-→ Retrieval (similar cases)
-→ Score Fusion
-→ Final Diagnosis Prediction
+- Byte-level BPE tokenizer trained from scratch
+- Compact transformer classifier
+- Retrieval over similar training cases
+- Expanded diagnosis dataset for broader coverage
+- Open-set abstention for uncertain queries
+- Safety-rule escalation for must-not-miss conditions
+- Natural-language assessment output
+- Browser UI for demos
+- Floating-point vs INT8 memory comparison utilities
+- KV-cache memory estimation utilities
 
----
+## Quantization Focus
 
-##  Project Structure
+The most important part of this repo is in `src/quantize.py`.
 
-| Path                  | Description                        |
-| --------------------- | ---------------------------------- |
-| `src/main.py`         | Main training + inference pipeline |
-| `src/bpe.py`          | Tokenizer training + loading       |
-| `src/disease_data.py` | Dataset handling + caching         |
-| `src/model.py`        | Transformer + classifier           |
-| `src/retrieve.py`     | Retrieval system                   |
-| `data/`               | Tokenizer, dataset, metadata       |
-| `model_diagnosis.pth` | Trained model                      |
+It includes:
 
----
+- `floating_point_weight_bytes(...)`
+- `estimated_int8_symmetric_per_tensor_bytes(...)`
 
-##  Setup
+These are used to show:
+
+- Approximate model size before quantization
+- Approximate model size after symmetric INT8 quantization
+- The size reduction ratio
+
+This is the key metric to present during the hackathon.
+
+## KV Cache Optimization Focus
+
+The second optimization story in this repo is **KV-cache memory**.
+
+Why it matters:
+
+- Quantization reduces model weight memory
+- KV-cache optimization reduces inference-time memory during autoregressive decoding
+
+This repo includes `src/kv_cache.py`, which estimates:
+
+- Full KV cache in FP32
+- Full KV cache in FP16
+- Quantized INT8 KV cache
+- Sliding-window KV cache in FP16
+
+It also includes a real cached-generation path in `src/model.py`:
+
+- `MiniGPT.generate_with_kv_cache(...)`
+
+This gives you a second hackathon metric:
+
+- **How much smaller does inference-time memory become when the cache is optimized?**
+
+## Project Structure
+
+| Path | Purpose |
+| --- | --- |
+| `src/main.py` | Training, evaluation, and CLI inference |
+| `src/webapp.py` | Browser demo UI |
+| `src/quantize.py` | Memory comparison and quantization helpers |
+| `src/kv_cache.py` | KV-cache memory estimation helpers |
+| `src/model.py` | Compact transformer classifier |
+| `src/retrieve.py` | Retrieval over known training cases |
+| `src/disease_data.py` | Dataset loading and expansion |
+| `src/clinical_support.py` | Safety rules and evidence support |
+| `data/` | Cached datasets, tokenizer, metrics |
+| `model_diagnosis.pth` | Trained checkpoint |
+
+## Setup
 
 ```bash
 git clone <your-repo-url>
-cd mini-rag-quant
+cd MINI-RAG-QUANT
 
 python -m venv venv
+
 # Windows
 venv\Scripts\activate
+
 # Mac/Linux
 source venv/bin/activate
 
 pip install -r requirements.txt
 ```
 
----
-
-##  Train & Run
+## Train The Demo
 
 ```bash
-cd src
-python main.py --retrain
+python src/main.py --retrain
 ```
 
 This will:
 
-* Download dataset
-* Train tokenizer
-* Train model
-* Evaluate performance
-* Run prediction
+- Build or refresh the dataset
+- Train the tokenizer
+- Train the classifier
+- Save the checkpoint
+- Save evaluation metrics
 
----
-
-##  Example
+## Show The Memory Comparison
 
 ```bash
-python main.py --query "I have fever, chills and body pain"
+python src/main.py --show-memory --show-kv-cache
 ```
 
----
+This is the simplest CLI version of the hackathon story.
 
-## Why This Matters
+It prints:
 
-Most AI systems:
-❌ hallucinate
-❌ require huge models
+- Floating-point weight size
+- Estimated INT8 weight size
+- Approximate reduction factor
+- Reference decoder KV-cache size in FP32 / FP16
+- Quantized KV-cache estimate
+- Sliding-window KV-cache estimate
 
-This system:
-✅ grounded in real data
-✅ efficient
-✅ explainable
-✅ reproducible
+## Run The Browser Demo
 
----
+```bash
+python src/webapp.py
+```
 
-##  Disclaimer
+Then open:
 
-This project is for **educational and research purposes only**.
-It is **not a medical system** and should **not be used for diagnosis or treatment**.
-Always consult a qualified healthcare professional.
+[http://127.0.0.1:8123](http://127.0.0.1:8123)
 
----
+The browser demo is designed for presentation.
+It highlights:
 
-## Hackathon Value
+- FP32 size
+- INT8 estimated size
+- Reduction ratio
+- KV-cache baseline memory
+- Quantized KV-cache memory
+- Sliding-window KV-cache memory
+- The diagnosis workflow as a live example
+- Retrieved cases and readable output formatting
 
-* Demonstrates **LLM fundamentals from scratch**
-* Shows **RAG without heavy frameworks**
-* Highlights **efficiency + quantization mindset**
-* Fully reproducible pipeline
+## Suggested Live Demo Flow
 
----
+1. Open the browser UI.
+2. Point to the `FP32 Size`, `INT8 Estimate`, and weight `Reduction` first.
+3. Then point to the KV-cache section and explain that inference memory can also be reduced.
+4. Run one symptom query to show that the optimized system still produces interpretable output.
+5. Close by restating both stories: smaller weights and smaller inference cache.
+
+## Example Pitch Line
+
+> We built a compact retrieval-assisted classifier and used it to show two practical deployment wins: model weights shrink after quantization, and inference memory can shrink further with KV-cache optimization.
+
+## Important Note
+
+This repo is for **educational and hackathon demonstration purposes only**.
+
+- It is **not** a medical device
+- It is **not** for diagnosis or treatment
+- The diagnosis workflow exists to support the quantization and KV-cache demo narrative
 
 ## License
 

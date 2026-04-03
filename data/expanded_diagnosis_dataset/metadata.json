@@ -1,0 +1,10 @@
+{
+  "dataset_name": "fhai50032/SymptomsDisease246k",
+  "raw_unique_labels": 773,
+  "raw_unique_examples": 189647,
+  "max_train_per_label": 16,
+  "max_test_per_label": 2,
+  "train_examples": 9783,
+  "test_examples": 1141,
+  "labels_with_train_examples": 773
+}

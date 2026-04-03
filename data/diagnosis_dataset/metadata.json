@@ -1,5 +1,13 @@
 {
   "dataset_name": "gretelai/symptom_to_diagnosis",
-  "train_examples": 853,
-  "test_examples": 212
+  "base_train_examples": 853,
+  "base_test_examples": 212,
+  "supplemental_dataset_dirs": [
+    "C:\\Users\\vibhu\\Documents\\GitHub\\MINI-RAG-QUANT\\data\\supplemental_diagnosis_dataset",
+    "C:\\Users\\vibhu\\Documents\\GitHub\\MINI-RAG-QUANT\\data\\expanded_diagnosis_dataset"
+  ],
+  "supplemental_train_examples": 9823,
+  "supplemental_test_examples": 1151,
+  "train_examples": 10672,
+  "test_examples": 1363
 }

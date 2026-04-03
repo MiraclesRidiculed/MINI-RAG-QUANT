@@ -1,15 +1,65 @@
 {
-  "dataset": "gretelai/symptom_to_diagnosis",
+  "dataset": "gretelai/symptom_to_diagnosis + local supplements + normalized expanded dataset",
   "tokenizer_vocab_size": 1024,
-  "num_labels": 22,
+  "num_labels": 785,
   "classifier_metrics": {
-    "loss": 1.0388970420045673,
-    "accuracy": 0.7122641509433962,
-    "top3_accuracy": 0.8962264150943396
+    "loss": 2.9494731340527274,
+    "accuracy": 0.31694790902421127,
+    "top3_accuracy": 0.5297138664710198
   },
   "inference_stack_metrics": {
-    "ensemble_accuracy": 0.8773584905660378,
-    "retrieval_top1_accuracy": 0.8537735849056604,
-    "low_confidence_rate": 0.1320754716981132
+    "ensemble_accuracy": 0.7109317681584739,
+    "retrieval_top1_accuracy": 0.6925898752751284,
+    "differential_top3_recall": 0.8701393983859135,
+    "low_confidence_rate": 0.3360234776228907,
+    "abstain_rate": 0.326485693323551,
+    "safety_gate_rate": 0.07923697725605282
+  },
+  "critical_condition_metrics": {
+    "overall_recall": 1.0,
+    "conditions": {
+      "rabies": {
+        "support": 3,
+        "hits": 3,
+        "floor": 1.0,
+        "recall": 1.0,
+        "passes_floor": true
+      },
+      "sepsis": {
+        "support": 3,
+        "hits": 3,
+        "floor": 1.0,
+        "recall": 1.0,
+        "passes_floor": true
+      },
+      "stroke": {
+        "support": 3,
+        "hits": 3,
+        "floor": 1.0,
+        "recall": 1.0,
+        "passes_floor": true
+      },
+      "meningitis": {
+        "support": 3,
+        "hits": 3,
+        "floor": 1.0,
+        "recall": 1.0,
+        "passes_floor": true
+      },
+      "acute coronary syndrome": {
+        "support": 3,
+        "hits": 3,
+        "floor": 1.0,
+        "recall": 1.0,
+        "passes_floor": true
+      },
+      "ectopic pregnancy": {
+        "support": 3,
+        "hits": 3,
+        "floor": 1.0,
+        "recall": 1.0,
+        "passes_floor": true
+      }
+    }
   }
 }

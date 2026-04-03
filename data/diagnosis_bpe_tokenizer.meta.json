@@ -3,7 +3,7 @@
   "actual_vocab_size": 1024,
   "requested_vocab_size": 1024,
   "min_frequency": 2,
-  "num_training_texts": 3195,
+  "num_training_texts": 36105,
   "special_tokens": [
     "[PAD]",
     "[UNK]",

@@ -1,0 +1,16 @@
+{
+  "description": "Local supplemental diagnosis data added on top of the base gretelai/symptom_to_diagnosis dataset.",
+  "train_examples": 40,
+  "test_examples": 10,
+  "labels": [
+    "rabies"
+  ],
+  "grounding_notes": [
+    "Examples are hand-authored paraphrases grounded in official rabies symptom descriptions.",
+    "Key symptom patterns emphasized: bite-site tingling or pain, fever, anxiety or confusion, hydrophobia, difficulty swallowing, excess saliva, hallucinations, and progressive weakness or paralysis after animal exposure."
+  ],
+  "sources": [
+    "https://archive.cdc.gov/www_cdc_gov/scienceambassador/documents/rabies-global-connection.pdf",
+    "https://iris.who.int/bitstream/handle/10665/204722/B5123.pdf"
+  ]
+}

@@ -25,6 +25,32 @@ class Head(nn.Module):
         v = self.value(x)
         return wei @ v
 
+    def forward_with_cache(
+        self,
+        x: torch.Tensor,
+        *,
+        past_k: torch.Tensor | None = None,
+        past_v: torch.Tensor | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        _, t, _ = x.shape
+        k_new = self.key(x)
+        q = self.query(x)
+        v_new = self.value(x)
+
+        k = torch.cat((past_k, k_new), dim=1) if past_k is not None else k_new
+        v = torch.cat((past_v, v_new), dim=1) if past_v is not None else v_new
+        scale = k.size(-1) ** -0.5
+        wei = q @ k.transpose(-2, -1) * scale
+
+        if t > 1:
+            total_t = k.size(1)
+            past_len = total_t - t
+            mask = torch.tril(torch.ones(t, total_t, device=x.device), diagonal=past_len)
+            wei = wei.masked_fill(mask == 0, float("-inf"))
+
+        wei = F.softmax(wei, dim=-1)
+        return wei @ v, k, v
+
 
 class MultiHeadAttention(nn.Module):
     """Multiple masked self-attention heads in parallel."""
@@ -36,6 +62,25 @@ class MultiHeadAttention(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.proj(torch.cat([head(x) for head in self.heads], dim=-1))
+
+    def forward_with_cache(
+        self,
+        x: torch.Tensor,
+        *,
+        past: list[tuple[torch.Tensor, torch.Tensor] | None] | None = None,
+    ) -> tuple[torch.Tensor, list[tuple[torch.Tensor, torch.Tensor]]]:
+        outputs: list[torch.Tensor] = []
+        next_past: list[tuple[torch.Tensor, torch.Tensor]] = []
+        per_head_past = past or [None] * len(self.heads)
+
+        for head, head_past in zip(self.heads, per_head_past, strict=False):
+            past_k = head_past[0] if head_past is not None else None
+            past_v = head_past[1] if head_past is not None else None
+            out, k, v = head.forward_with_cache(x, past_k=past_k, past_v=past_v)
+            outputs.append(out)
+            next_past.append((k, v))
+
+        return self.proj(torch.cat(outputs, dim=-1)), next_past
 
 
 class FeedForward(nn.Module):
@@ -66,6 +111,17 @@ class Block(nn.Module):
         x = x + self.sa(self.ln1(x))
         x = x + self.ffwd(self.ln2(x))
         return x
+
+    def forward_with_cache(
+        self,
+        x: torch.Tensor,
+        *,
+        past: list[tuple[torch.Tensor, torch.Tensor] | None] | None = None,
+    ) -> tuple[torch.Tensor, list[tuple[torch.Tensor, torch.Tensor]]]:
+        attn_out, next_past = self.sa.forward_with_cache(self.ln1(x), past=past)
+        x = x + attn_out
+        x = x + self.ffwd(self.ln2(x))
+        return x, next_past
 
 
 class MiniGPT(nn.Module):
@@ -105,6 +161,71 @@ class MiniGPT(nn.Module):
             idx_next = torch.multinomial(probs, num_samples=1)
             idx = torch.cat((idx, idx_next), dim=1)
         return idx
+
+    def forward_step(
+        self,
+        idx: torch.Tensor,
+        *,
+        past: list[list[tuple[torch.Tensor, torch.Tensor] | None]] | None = None,
+        position: int = 0,
+    ) -> tuple[torch.Tensor, list[list[tuple[torch.Tensor, torch.Tensor]]]]:
+        if position >= self.block_size:
+            raise ValueError(
+                f"Position {position} exceeds block_size={self.block_size}. "
+                "Use a shorter prompt or a larger block size for cached generation."
+            )
+
+        _, t = idx.shape
+        if position + t > self.block_size:
+            raise ValueError(
+                f"Step ending at position {position + t} exceeds block_size={self.block_size}."
+            )
+
+        tok_emb = self.token_embedding_table(idx)
+        positions = torch.arange(position, position + t, device=idx.device)
+        pos_emb = self.position_embedding_table(positions)
+        x = tok_emb + pos_emb
+
+        next_past: list[list[tuple[torch.Tensor, torch.Tensor]]] = []
+        per_block_past = past or [None] * len(self.blocks)
+        for block, block_past in zip(self.blocks, per_block_past, strict=False):
+            x, block_next_past = block.forward_with_cache(x, past=block_past)
+            next_past.append(block_next_past)
+
+        x = self.ln_f(x)
+        logits = self.lm_head(x)
+        return logits, next_past
+
+    def generate_with_kv_cache(self, idx: torch.Tensor, max_new_tokens: int) -> torch.Tensor:
+        total_len = idx.size(1) + max_new_tokens
+        if total_len > self.block_size:
+            raise ValueError(
+                f"Cached generation requires total length <= block_size ({self.block_size}), got {total_len}."
+            )
+
+        generated = idx
+        cache: list[list[tuple[torch.Tensor, torch.Tensor]]] | None = None
+        logits = None
+        for position in range(idx.size(1)):
+            logits, cache = self.forward_step(
+                generated[:, position : position + 1],
+                past=cache,
+                position=position,
+            )
+
+        for position in range(idx.size(1), total_len):
+            if logits is None:
+                raise RuntimeError("Cached generation did not produce logits for the initial prompt.")
+            probs = F.softmax(logits[:, -1, :], dim=-1)
+            idx_next = torch.multinomial(probs, num_samples=1)
+            generated = torch.cat((generated, idx_next), dim=1)
+            logits, cache = self.forward_step(
+                idx_next,
+                past=cache,
+                position=position,
+            )
+
+        return generated
 
 
 class DiagnosisClassifier(nn.Module):
